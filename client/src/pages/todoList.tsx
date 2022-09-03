@@ -1,19 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './todo.css'
+import { getData, setItemText, setIsUpdating, setUpdateItemText } from '../redux/reducer'
+import { useDispatch, useSelector } from 'react-redux'
 
 const ToDoList = () => {
-    const [itemText, setItemText] = useState('');
-    const [listItems, setListItems] = useState([{_id: '', item: ''}]);
-    const [isUpdating, setIsUpdating] = useState('');
-    const [updateItemText, setUpdateItemText] = useState('');
+    // const [itemText, setItemText] = useState('');
+    const [listItems, setListItems] = useState([{ _id: '', item: '' }]);
+    // const [isUpdating, setIsUpdating] = useState('');
+    // const [updateItemText, setUpdateItemText] = useState('');
+    const todoData = useSelector((state: any) => state.articleTransfer.value)
+    const itemText = useSelector((state: any) => state.articleTransfer.text)
+    const isUpdating = useSelector((state: any) => state.articleTransfer.isUpdating)
+    const updateItemsText = useSelector((state: any) => state.articleTransfer.updateItemText)
+    const dispatch = useDispatch()
 
     const addItem = async (e: any) => {
         e.preventDefault();
         try {
             const res = await axios.post('http://localhost:5500/api/item', { item: itemText })
-            setListItems(prev => [...prev, res.data]);
-            setItemText('');
+            dispatch(getData((prev: any) => [...prev, res.data]))
+            // setListItems(prev => [...prev, res.data]);
+            dispatch(setItemText(''))
+            // setItemText('');
         } catch (err) {
             console.log(err);
         }
@@ -23,7 +32,8 @@ const ToDoList = () => {
         const getItemsList = async () => {
             try {
                 const res = await axios.get('http://localhost:5500/api/items')
-                setListItems(res.data);
+                // setListItems(res.data);
+                dispatch(getData(res.data))
                 console.log('render', res.data)
             } catch (err) {
                 console.log(err);
@@ -35,8 +45,9 @@ const ToDoList = () => {
     const deleteItem = async (id: any) => {
         try {
             const res = await axios.delete(`http://localhost:5500/api/item/${id}`)
-            const newListItems = listItems.filter(item => item._id !== id);
-            setListItems(newListItems);
+            const newListItems = todoData.filter((item: any) => item._id !== id);
+            dispatch(getData(newListItems))
+            // setListItems(newListItems);
         } catch (err) {
             console.log(err);
         }
@@ -46,12 +57,15 @@ const ToDoList = () => {
     const updateItem = async (e: any) => {
         e.preventDefault()
         try {
-            const res = await axios.put(`http://localhost:5500/api/item/${isUpdating}`, { item: updateItemText })
-            console.log(res.data)
-            const updatedItemIndex = listItems.findIndex(item => item._id === isUpdating);
-            const updatedItem = listItems[updatedItemIndex].item = updateItemText;
-            setUpdateItemText('');
-            setIsUpdating('');
+            console.log("is", isUpdating)
+            const res = await axios.put(`http://localhost:5500/api/item/${isUpdating}`, { item: updateItemsText })
+            const updatedItemIndex = todoData.findIndex((item: any) => item._id === isUpdating);
+            const updatedItem = todoData[updatedItemIndex].item = updateItemsText;
+            // dispatch(getData(updatedItemIndex))
+            dispatch(setUpdateItemText(''));
+            dispatch(setIsUpdating(''))
+            window.location.href = '/'
+            // setIsUpdating('');
         } catch (err) {
             console.log(err);
         }
@@ -59,7 +73,7 @@ const ToDoList = () => {
     //before updating item we need to show input field where we will create our updated item
     const renderUpdateForm = () => (
         <form className="update-form" onSubmit={(e) => { updateItem(e) }} >
-            <input className="update-new-input" type="text" placeholder="New Item" onChange={e => { setUpdateItemText(e.target.value) }} value={updateItemText} />
+            <input className="update-new-input" type="text" placeholder="New Item" onChange={e => { dispatch(setUpdateItemText(e.target.value)) }} value={updateItemsText} />
             <button className="update-new-btn" type="submit">Update</button>
         </form>
     )
@@ -67,19 +81,19 @@ const ToDoList = () => {
     return (
         <div className='App'>
             <form className='form' onSubmit={e => addItem(e)}>
-                <input type="text" placeholder='Add Todo Item' onChange={e => { setItemText(e.target.value) }}></input>
+                <input type="text" placeholder='Add Todo Item' onChange={e => { dispatch(setItemText(e.target.value)) }}></input>
                 <button type='submit'>Add</button>
             </form>
             <div className='todo-listItems'>
                 {
-                    listItems.map(item => (
+                    todoData.map((item: any) => (
                         <div className="todo-item">
                             {
                                 isUpdating === item._id
                                     ? renderUpdateForm()
                                     : <>
                                         <p className="item-content">{item.item}</p>
-                                        <button className="update-item" onClick={() => { setIsUpdating(item._id) }}>Update</button>
+                                        <button className="update-item" onClick={() => { dispatch(setIsUpdating(item._id)) }}>Update</button>
                                         <button className="delete-item" onClick={() => { deleteItem(item._id) }}>Delete</button>
                                     </>
                             }
