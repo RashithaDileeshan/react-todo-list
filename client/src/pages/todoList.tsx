@@ -57,14 +57,12 @@ const ToDoList = () => {
     const updateItem = async (e: any) => {
         e.preventDefault()
         try {
-            console.log("is", isUpdating)
             const res = await axios.put(`http://localhost:5500/api/item/${isUpdating}`, { item: updateItemsText })
             const updatedItemIndex = todoData.findIndex((item: any) => item._id === isUpdating);
+            window.location.href = '/'
             const updatedItem = todoData[updatedItemIndex].item = updateItemsText;
-            // dispatch(getData(updatedItemIndex))
             dispatch(setUpdateItemText(''));
             dispatch(setIsUpdating(''))
-            window.location.href = '/'
             // setIsUpdating('');
         } catch (err) {
             console.log(err);
@@ -84,9 +82,10 @@ const ToDoList = () => {
                 <input type="text" placeholder='Add Todo Item' onChange={e => { dispatch(setItemText(e.target.value)) }}></input>
                 <button type='submit'>Add</button>
             </form>
-            <div className='todo-listItems'>
-                {
-                    todoData.map((item: any) => (
+        {
+                todoData.map((item: any) => (
+                    <div className='todo-listItems'>
+
                         <div className="todo-item">
                             {
                                 isUpdating === item._id
@@ -98,9 +97,9 @@ const ToDoList = () => {
                                     </>
                             }
                         </div>
-                    ))
-                }
-            </div>
+                    </div>
+                ))
+            }
         </div>
     );
 };
